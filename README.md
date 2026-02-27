@@ -1,241 +1,145 @@
+# EMR NER API
 
-# EMR NER Inference API Documentation for User Management and Prediction Service
-
-This project provides a RESTful API for user registration, login, and entity prediction. The API is designed to manage user accounts and perform predictions for EMR (Electronic Medical Records) on input text based on specified labels.
-
-## Table of Contents
-
-- [Installation](#installation)
-- [Test API in Browser](#test-api-in-browser)
-- [Streamlit Client](#streamlit-client)
-- [API Endpoints](#api-endpoints)
-  - [User Registration API](#user-registration-api)
-  - [User Login API](#user-login-api)
-  - [Prediction API](#prediction-api)
-- [Error Handling](#error-handling)
-- [Logging](#logging)
+Django REST API for:
+- user registration/login
+- entity extraction from EMR text (`/api/predict/`)
+- PII masking with label placeholders (`/api/mask/`)
 
 ## Installation
 
-To set up the project, follow these steps:
+1. Create and activate virtual environment:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-1. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
+3. Start server:
+```bash
+python manage.py runserver
+```
 
-2. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Base URL: `http://localhost:8000/api/`
 
-3. Run the development server:
-   ```bash
-   python manage.py runserver
-   ```
+## Quick Browser Test
 
-The API will be available at `http://localhost:8000/api/`.
+Open:
+- `http://localhost:8000/api/`
+- `http://localhost:8000/api/health/`
+- `http://localhost:8000/api/register/`
+- `http://localhost:8000/api/login/`
+- `http://localhost:8000/api/predict/`
+- `http://localhost:8000/api/mask/`
 
-## Test API in Browser
-
-After starting the server, open these URLs in your browser:
-
-- API root: `http://localhost:8000/api/`
-- Health check: `http://localhost:8000/api/health/`
-- Register: `http://localhost:8000/api/register/`
-- Login: `http://localhost:8000/api/login/`
-- Predict: `http://localhost:8000/api/predict/`
-
-Use Django REST Framework's browsable API pages for POST endpoints:
-
-1. Open `http://localhost:8000/api/register/`, choose `POST`, and create a user.
-2. Open `http://localhost:8000/api/login/`, choose `POST`, and log in to get a token.
-3. Open `http://localhost:8000/api/predict/`.
-4. Click the `POST` form and add:
-   - `text`: input sentence
-   - `labels`: list of labels
-
-Authentication is currently disabled, so `/api/predict/` can be called directly without a token.
+Authentication is currently disabled globally, so predict and mask can be called directly.
 
 ## Streamlit Client
 
-This repo includes a Streamlit app at `streamlit_app.py` that can call:
-
-- `/api/health/`
-- `/api/register/`
-- `/api/login/`
-- `/api/predict/`
-
-Run it with:
-
+Run:
 ```bash
 source .venv/bin/activate
 streamlit run streamlit_app.py
 ```
 
-Then open `http://localhost:8501` and set the API base URL (default: `http://localhost:8000/api`).
+Open `http://localhost:8501` and use the app tabs for register/login/predict/mask.
 
 ## API Endpoints
 
-### User Registration API
+### `POST /api/register/`
+Create user account.
 
-**Endpoint:**  
-`POST /api/register/`
+Request:
+```json
+{
+  "username": "demo",
+  "password": "demo123"
+}
+```
 
-**Description:**  
-This endpoint allows users to register by providing a username and password.
+Success:
+```json
+{
+  "message": "User registered successfully"
+}
+```
 
-**Request Parameters:**
+### `POST /api/login/`
+Login and get token (token is optional currently because auth is disabled).
 
-| Parameter | Type   | Required | Description                          |
-|-----------|--------|----------|--------------------------------------|
-| username  | string | Yes      | The desired username for the new user. |
-| password  | string | Yes      | The desired password for the new user. |
+Request:
+```json
+{
+  "username": "demo",
+  "password": "demo123"
+}
+```
 
-**Responses:**
+Success:
+```json
+{
+  "token": "generated_token_here"
+}
+```
 
-- **201 Created**  
-  ```json
-  {
-      "message": "User registered successfully"
-  }
-  ```
+### `POST /api/predict/`
+Extract entities from text for provided labels.
 
-- **400 Bad Request**  
-  ```json
-  {
-      "error": "Username and password are required"
-  }
-  ```
-
-- **400 Bad Request**  
-  ```json
-  {
-      "error": "User already registered"
-  }
-  ```
-
-- **500 Internal Server Error**  
-  ```json
-  {
-      "error": "An error occurred during registration"
-  }
-  ```
-
----
-
-### User Login API
-
-**Endpoint:**  
-`POST /api/login/`
-
-**Description:**  
-This endpoint allows users to log in by providing their username and password.
-
-**Request Parameters:**
-
-| Parameter | Type   | Required | Description                        |
-|-----------|--------|----------|------------------------------------|
-| username  | string | Yes      | The username of the user.         |
-| password  | string | Yes      | The password of the user.         |
-
-**Responses:**
-
-- **200 OK**  
-  ```json
-  {
-      "token": "generated_token_here"
-  }
-  ```
-
-- **400 Bad Request**  
-  ```json
-  {
-      "error": "Invalid credentials"
-  }
-  ```
-
-- **500 Internal Server Error**  
-  ```json
-  {
-      "error": "An error occurred during login"
-  }
-  ```
-
----
-
-### Prediction API
-
-**Endpoint:**  
-`POST /api/predict/`
-
-**Description:**  
-This endpoint accepts input text and labels to perform entity prediction.
-
-**Request Parameters:**
-
-| Parameter | Type   | Required | Description                         |
-|-----------|--------|----------|-------------------------------------|
-| text      | string | Yes      | The input text for prediction.      |
-| labels    | array  | Yes      | A list of labels for prediction.    |
-
-  ```json
-
+Request:
+```json
+{
   "text": "Mrs. Aruna Gupta, age 60, was admitted on 01/11/2024 for chest pain and was treated with 325 mg of Aspirin. Further testing confirmed mild myocardial infarction.",
+  "labels": ["patient name", "age", "disease", "dosage", "symptoms"]
+}
+```
 
-  "labels": ["patient name","age","disease","Dosage","Symtoms"]
+Success:
+```json
+{
+  "entities": [
+    {"text": "Mrs. Aruna Gupta", "label": "patient name"},
+    {"text": "60", "label": "age"},
+    {"text": "325 mg", "label": "dosage"},
+    {"text": "mild myocardial infarction", "label": "disease"}
+  ]
+}
+```
 
-  ```
+### `POST /api/mask/`
+Uses the same input format as `/api/predict/`. It runs prediction internally and returns redacted text where detected entities are replaced by placeholders using label names.
 
-**Responses:**
+Request:
+```json
+{
+  "text": "Mrs. Aruna Gupta, age 60, was admitted on 01/11/2024 for chest pain and was treated with 325 mg of Aspirin.",
+  "labels": ["patient name", "age", "dosage", "symptoms"]
+}
+```
 
-- **200 OK**  
-  ```json
-    "entities": [
-        {
-            "text": "Mrs. Aruna Gupta",
-            "label": "patient name"
-        },
-        {
-            "text": "age 60",
-            "label": "age"
-        },
-        {
-            "text": "325 mg",
-            "label": "Dosage"
-        },
-        {
-            "text": "mild myocardial infarction",
-            "label": "disease"
-        }
-    ]
-  ```
+Success:
+```json
+{
+  "entities": [
+    {"text": "Mrs. Aruna Gupta", "label": "patient name"},
+    {"text": "60", "label": "age"},
+    {"text": "325 mg", "label": "dosage"}
+  ],
+  "masked_text": "[patient name], age [age], was admitted on 01/11/2024 for chest pain and was treated with [dosage] of Aspirin.",
+  "masked_entities_count": 3
+}
+```
 
-- **400 Bad Request**  
-  ```json
-  {
-      "error": "Validation errors"
-  }
-  ```
-
-- **500 Internal Server Error**  
-  ```json
-  {
-      "error": "Prediction failed"
-  }
-  ```
+### `GET /api/health/`
+Health probe endpoint.
 
 ## Error Handling
 
-The API provides meaningful error messages to help clients understand what went wrong during requests. Standard HTTP status codes are used to indicate the outcome of the requests.
+- `400 Bad Request`: invalid payload/validation errors.
+- `500 Internal Server Error`: inference or unexpected server failures.
 
 ## Logging
 
-The API includes logging functionality that tracks significant events and errors. Logs are written to a file (`ner_model.log`) and include timestamps, log levels, and the source module for better traceability.
-
-
----
-
-**Author:** Viraj Yadav
+Application logs are written to `ner_model.log`.
