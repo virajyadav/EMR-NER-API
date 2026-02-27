@@ -6,6 +6,8 @@ This project provides a RESTful API for user registration, login, and entity pre
 ## Table of Contents
 
 - [Installation](#installation)
+- [Test API in Browser](#test-api-in-browser)
+- [Streamlit Client](#streamlit-client)
 - [API Endpoints](#api-endpoints)
   - [User Registration API](#user-registration-api)
   - [User Login API](#user-login-api)
@@ -35,6 +37,45 @@ To set up the project, follow these steps:
    ```
 
 The API will be available at `http://localhost:8000/api/`.
+
+## Test API in Browser
+
+After starting the server, open these URLs in your browser:
+
+- API root: `http://localhost:8000/api/`
+- Health check: `http://localhost:8000/api/health/`
+- Register: `http://localhost:8000/api/register/`
+- Login: `http://localhost:8000/api/login/`
+- Predict: `http://localhost:8000/api/predict/`
+
+Use Django REST Framework's browsable API pages for POST endpoints:
+
+1. Open `http://localhost:8000/api/register/`, choose `POST`, and create a user.
+2. Open `http://localhost:8000/api/login/`, choose `POST`, and log in to get a token.
+3. Open `http://localhost:8000/api/predict/`.
+4. Click the `POST` form and add:
+   - `text`: input sentence
+   - `labels`: list of labels
+
+Authentication is currently disabled, so `/api/predict/` can be called directly without a token.
+
+## Streamlit Client
+
+This repo includes a Streamlit app at `streamlit_app.py` that can call:
+
+- `/api/health/`
+- `/api/register/`
+- `/api/login/`
+- `/api/predict/`
+
+Run it with:
+
+```bash
+source .venv/bin/activate
+streamlit run streamlit_app.py
+```
+
+Then open `http://localhost:8501` and set the API base URL (default: `http://localhost:8000/api`).
 
 ## API Endpoints
 
@@ -198,4 +239,3 @@ The API includes logging functionality that tracks significant events and errors
 ---
 
 **Author:** Viraj Yadav
-
