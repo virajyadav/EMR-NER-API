@@ -47,6 +47,26 @@ streamlit run streamlit_app.py
 
 Open `http://localhost:8501` and use the app tabs for register/login/predict/mask.
 
+## PII Model Evaluation
+
+Use `evaluate_pii_model.py` to benchmark `urchade/gliner_multi_pii-v1` on the dataset at `pii_dataset/ai_data.csv`.
+
+Run on a sample:
+```bash
+source .venv/bin/activate
+python evaluate_pii_model.py --csv pii_dataset/ai_data.csv --max-rows 100 --threshold 0.5
+```
+
+Run full evaluation and save report:
+```bash
+python evaluate_pii_model.py --csv pii_dataset/ai_data.csv --threshold 0.5 --output-json pii_eval_metrics.json
+```
+
+Important output fields:
+- `overall_micro`: global precision/recall/F1 across all labels.
+- `per_label`: TP/FP/FN and precision/recall/F1 for each entity type.
+- `canonical_label_map`: dataset-label to model-label mapping used during inference.
+
 ## API Endpoints
 
 ### `POST /api/register/`
